@@ -60,7 +60,7 @@ namespace Medihelp.Graph.Api
             }
 
             app.UseGraphiQl();
-            //app.UseHttpsRedirection();
+            app.UseHttpsRedirection();
             app.UseMvc();
         }
     }

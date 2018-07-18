@@ -17,6 +17,8 @@ namespace Medihelp.Graph.Core.Model.Member
         public string Gender { get; set; }
         public string Status { get; set; }
 
+
+
         public string IdNumber { get; set; }
         public string Language { get; set; }
         public string EmailAddress { get; set; }
@@ -25,10 +27,19 @@ namespace Medihelp.Graph.Core.Model.Member
         public Boolean IsNetwork { get; set; }
         public string EmployerGroup { get; set; }
 
+        public string EmployerGroupDescription { get; set; }
+        public string MaritalStatus { get; set; }
+        public string MaritalStatusDescription { get; set; }
+        public DateTime? DateMarital { get; set; }
+        public Boolean VisuallyImpaired { get; set; }
+        public decimal? MonthlyContribution { get; set; }
+        public Boolean HoldPost { get; set; }
 
+        public Boolean ArrearNotification { get; set; }
+        public Boolean TerminationNotification { get; set; }
+        
 
         public List<Beneficiary> Dependents { get; set; }
-
         public ContactDetail HomeAddress { get; set; }
         public ContactDetail PostalAddress { get; set; }
         public ContactDetail WorkAddress { get; set; }
