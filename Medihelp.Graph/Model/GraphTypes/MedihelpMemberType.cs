@@ -7,28 +7,29 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Linq;
 using Newtonsoft.Json.Linq;
+using Medihelp.Graph.Core.Data.Repository.Interface;
 
 namespace Medihelp.Graph.Api.Model.GraphTypes
 {
     public class MedihelpMemberType : ObjectGraphType<MedihelpMember>
     {
-        public MedihelpMemberType()
+        public MedihelpMemberType(IMemberRepository memberRepo)
         {
-            Field(x => x.MemberNumber);
-            Field(x => x.Title);
-            Field(x => x.Init);
-            Field(x => x.FirstName);
-            Field(x => x.Surname);
-            Field(x => x.Gender);
-            Field(x => x.Status);
+            Field(x => x.MemberNumber).Description("");
+            Field(x => x.Title).Description(""); ;
+            Field(x => x.Init).Description(""); ;
+            Field(x => x.FirstName).Description(""); ;
+            Field(x => x.Surname).Description(""); ;
+            Field(x => x.Gender).Description(""); ;
+            Field(x => x.Status).Description(""); ;
 
-            Field(x => x.IdNumber);
-            Field(x => x.Language);
-            Field(x => x.EmailAddress);
-            Field(x => x.Product);
-            Field(x => x.ProductDescription);
-            Field(x => x.IsNetwork);
-            Field(x => x.EmployerGroup);
+            Field(x => x.IdNumber).Description(""); ;
+            Field(x => x.Language).Description(""); ;
+            Field(x => x.EmailAddress).Description(""); ;
+            Field(x => x.Product).Description(""); ;
+            Field(x => x.ProductDescription).Description(""); ;
+            Field(x => x.IsNetwork).Description(""); ;
+            Field(x => x.EmployerGroup).Description(""); ;
 
 
             //Dependants

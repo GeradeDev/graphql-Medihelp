@@ -4,4 +4,8 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Medihelp.Graph.Data\Medihelp.Graph.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>

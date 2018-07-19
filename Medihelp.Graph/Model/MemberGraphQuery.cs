@@ -1,11 +1,6 @@
 ﻿using GraphQL.Types;
 using Medihelp.Graph.Api.Model.GraphTypes;
-using Medihelp.Graph.Core.Data;
-using Medihelp.Graph.Core.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Medihelp.Graph.Core.Data.Repository.Interface;
 
 namespace Medihelp.Graph.Api.Model
 {

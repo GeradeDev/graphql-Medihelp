@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Medihelp.Graph.Api.Controllers
 {
     [Route("[controller]")]
+    [ApiExplorerSettings(IgnoreApi = true)]
     public class GraphQLController : Controller
     {
         private readonly IDocumentExecuter _documentExecuter;

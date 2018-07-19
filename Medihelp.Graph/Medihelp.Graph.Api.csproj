@@ -13,11 +13,13 @@
     <PackageReference Include="graphiql" Version="1.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.1.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="3.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="3.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Medihelp.Graph.Core\Medihelp.Graph.Core.csproj" />
-    <ProjectReference Include="..\Medihelp.Graph.Data\Medihelp.Graph.Data.csproj" />
+    <ProjectReference Include="..\Medihelp.Graph.Data\Medihelp.Graph.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

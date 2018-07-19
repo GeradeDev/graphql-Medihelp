@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27703.2042
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medihelp.Graph.Api", "Medihelp.Graph\Medihelp.Graph.Api.csproj", "{72478C99-28DB-4C50-8CC6-A30AEAB8FD15}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Medihelp.Graph.Api", "Medihelp.Graph\Medihelp.Graph.Api.csproj", "{72478C99-28DB-4C50-8CC6-A30AEAB8FD15}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medihelp.Graph.Core", "Medihelp.Graph.Core\Medihelp.Graph.Core.csproj", "{93C920B1-3C36-4B8E-8ECE-3DB7CD167C0E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Medihelp.Graph.Core", "Medihelp.Graph.Core\Medihelp.Graph.Core.csproj", "{93C920B1-3C36-4B8E-8ECE-3DB7CD167C0E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medihelp.Graph.Data", "Medihelp.Graph.Data\Medihelp.Graph.Data.csproj", "{DDFBFDD2-A232-481F-A1B9-04676750B621}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Medihelp.Graph.Infrastructure", "Medihelp.Graph.Data\Medihelp.Graph.Infrastructure.csproj", "{DDFBFDD2-A232-481F-A1B9-04676750B621}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -5,6 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Medihelp.Graph.Core.Data.Repository.Interface;
+using System.Threading;
+using System.Globalization;
 
 namespace Medihelp.Graph.Data.Repository
 {
@@ -12,16 +15,40 @@ namespace Medihelp.Graph.Data.Repository
     {
         public WebsiteIntergation.WebsiteIntegrationPortTypeClient _detailRequest;
         public BankingDetailsIntegration.MemberBankDetailIntegrationPortTypeClient _BankingRequest;
+        public EmployerIntegrationService.EmployerWebsiteIntegrationPortTypeClient _EmployerRequest;
 
         public MemberRepository()
         {
             _detailRequest = new WebsiteIntergation.WebsiteIntegrationPortTypeClient(WebsiteIntergation.WebsiteIntegrationPortTypeClient.EndpointConfiguration.WebsiteIntegrationPort);
             _BankingRequest = new BankingDetailsIntegration.MemberBankDetailIntegrationPortTypeClient(BankingDetailsIntegration.MemberBankDetailIntegrationPortTypeClient.EndpointConfiguration.MemberBankDetailIntegrationPort12);
+            _EmployerRequest = new EmployerIntegrationService.EmployerWebsiteIntegrationPortTypeClient(EmployerIntegrationService.EmployerWebsiteIntegrationPortTypeClient.EndpointConfiguration.EmployerWebsiteIntegrationPort12);
         }
 
+
+
+        
         public async Task<MedihelpMember> GetMember(int memberNo)
         {
             var details = await _detailRequest.MemberDetailRequestAsync(new WebsiteIntergation.MemberDetailInput() { Scheme = "MH", MemberNumber = memberNo });          
+
+            var deps = (from d in details.MemberDetailResponse.Dependants.Skip(1)
+                       select new Beneficiary
+                       {
+                           DependantNumber = d.DependantNumber.Value,
+                           FirstName = d.FirstName,
+                           Surname = d.Surname,
+                           BenefitDate = d.DateBenefitStart,
+                           EnrollmentDate = d.DateEnrollStart,
+                           CellphoneNumber = d.DependantCellNumber,
+                           DateOfBirth = d.DateBirth,
+                           DependantStatus = d.Status,
+                           EmailAddress = d.DependantEmailAddress,
+                           Gender = d.Gender,
+                           IdNumber = d.IdNumber,
+                           Initials = d.Init,
+                           PassportNumber = d.PassportNumber,
+                           Title = d.Title
+                       }).ToList();
 
             return new MedihelpMember
             {
@@ -47,7 +74,8 @@ namespace Medihelp.Graph.Data.Repository
                 MonthlyContribution = details.MemberDetailResponse.MonthlyContribution,
                 HoldPost = details.MemberDetailResponse.HoldPost,
                 ArrearNotification = details.MemberDetailResponse.ArrearNotification,
-                TerminationNotification = details.MemberDetailResponse.TerminationNotification
+                TerminationNotification = details.MemberDetailResponse.TerminationNotification,
+                Dependents = deps
             };
         }
 
@@ -118,8 +146,7 @@ namespace Medihelp.Graph.Data.Repository
                         DateEnded = (!String.IsNullOrEmpty(d.DateEnd) ? DateTime.Parse(d.DateEnd) : (DateTime?)null)
                     }).ToList();
         }
-
-
+        
         public async Task<List<BankingDetail>> GetBankingDetails(int memberNo)
         {
             var bankingDetails = await _BankingRequest.MemberBankDetailRequestAsync(new BankingDetailsIntegration.MemberBankDetailInput { MemberNumber = memberNo, Scheme = "MH" });
@@ -142,5 +169,65 @@ namespace Medihelp.Graph.Data.Repository
                         RateChargeIndicator = d.RateChargeInd
                     }).ToList();
         }
+        
+        public async Task<List<Exclusion>> GetMemberExcluisions(int memberNo, int depNo)
+        {
+            var exclusions = await _detailRequest.ExclusionDetailRequestAsync(new WebsiteIntergation.ExclusionDetailInput { Scheme = "MH", MemberNumber = memberNo });
+
+            return (from exc in exclusions.ExclusionDetailResponse.Exclusions
+                    select new Exclusion
+                    {
+                        Diagnosis = exc.DiagnosisCodeDescription,
+                        DiagnosisCode = exc.DiagnosisCode.ToString(),
+                        StartDate = exc.ExclusionStartDate,
+                        EndDate = exc.ExclusionEndDate,
+                        Type = exc.ExclusionType,
+                        PMBCat = exc.PmbCategory,
+                        DependantNumber = exc.DependantNumber.ToString()
+                    }).ToList();
+        }
+        
+        public async Task<SubscriptionBreakdown> GetSubscriptionBreakdown(int memberNo, DateTime month){
+
+            var breakdown = await _EmployerRequest.SubscriptionBreakdownRequestAsync(new EmployerIntegrationService.SubscriptionBreakdownInput { Scheme = "MH",  MemberNumber = memberNo, DateEffective = month });
+
+            SubscriptionBreakdown sub = new SubscriptionBreakdown()
+            {
+                Dependants = (from d in breakdown.SubscriptionBreakdownResponse.Dependants
+                              select new Dependant
+                              {
+                                  DescriptionofRelations = d.DependantType,
+                                  SavingsContribution = (!string.IsNullOrEmpty(d.SavingsAmount.ToString()) ? d.SavingsAmount.Value : (decimal)0),
+                                  LJPAmount = (!string.IsNullOrEmpty(d.LateJoinerPenalty.ToString()) ? d.LateJoinerPenalty.Value : (decimal)0),
+                                  Subscription = d.CoreSubscription,
+                                  MonthlySubscription = d.TotMonthlySubscription
+                              }).ToList(),
+
+                MaxSubsCalculate = (!string.IsNullOrEmpty(breakdown.SubscriptionBreakdownResponse.MaxSubsidy.ToString()) ? breakdown.SubscriptionBreakdownResponse.MaxSubsidy.Value : (decimal)0),
+                MemberPortion = breakdown.SubscriptionBreakdownResponse.MemberPortion,
+                Subsidy = (!string.IsNullOrEmpty(breakdown.SubscriptionBreakdownResponse.Subsidy.ToString()) ? breakdown.SubscriptionBreakdownResponse.Subsidy.Value : (decimal)0),
+                SubsidyFactor = breakdown.SubscriptionBreakdownResponse.SubsidyFactor,
+                TotalSubscription = breakdown.SubscriptionBreakdownResponse.TotalSubscription,
+            };
+
+            return sub;
+        }
+        
+        public async Task<List<LateJoinerPenalty>> GetMemberPenalties(int memberNo)
+        {
+            var details = await _detailRequest.MemberLateJoinerPenaltyRequestAsync(new WebsiteIntergation.MemberLateJoinerPenaltyInput() { Scheme = "MH", MemberNumber = memberNo });
+
+            return (from ljp in details.MemberLateJoinerPenaltyResponse.LateJoinerPenalties
+                    select new LateJoinerPenalty
+                    {
+                        LjpPercentage = ljp.AddonPercentage.ToString(),
+                        DepNumber = ljp.DependantNumber.ToString(),
+                        EffectiveDate = ljp.DateEffective,
+                        EndDate = (ljp.DateEnd ?? Convert.ToDateTime("0001/01/01")),
+                        ReasonCode = ljp.ReasonCode,
+                        LJPAmount = -1
+                    }).ToList();
+        }
+
     }
 }
