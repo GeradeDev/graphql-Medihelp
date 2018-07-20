@@ -9,20 +9,24 @@ namespace Medihelp.Graph.Core.Data.Repository.Interface
     {
         Task<MedihelpMember> GetMember(int memberNo);
 
-        Task<List<Beneficiary>> GetDepoendantsOnly(int memberNo);
+        Task<List<Beneficiary>> GetDepoendantsOnly(int memberNo, int depNo = 0);
 
-        Task<List<MemberAddress>> GetAllAddresses(int memberNo);
+        Task<List<MemberAddress>> GetAllAddresses(int memberNo, string type);
 
-        Task<List<ContactDetail>> GetContacts(int memberNo);
+        Task<List<ContactDetail>> GetContacts(int memberNo, string type);
 
         Task<List<BenefitOption>> GetProductHistory(int memberNo);
 
         Task<List<BankingDetail>> GetBankingDetails(int memberNo);
 
-        Task<List<Exclusion>> GetMemberExcluisions(int memberNo, int depNo);
+        Task<List<Exclusion>> GetMemberExcluisions(int memberNo, int depNo = 0);
 
         Task<SubscriptionBreakdown> GetSubscriptionBreakdown(int memberNo, DateTime month);
 
-        Task<List<LateJoinerPenalty>> GetMemberPenalties(int memberNo);
+        Task<List<LateJoinerPenalty>> GetMemberPenalties(int memberNo, int depNo = 0);
+
+        Task<List<Benefit>> GetAvailableBenefits(int memberNo, int depNo = 0);
+
+        Task<SavingsReconciliation> GetSavingsReconciliation(int memberNo);
     }
 }

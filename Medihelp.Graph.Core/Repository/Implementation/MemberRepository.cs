@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Medihelp.Graph.Core.Data.Repository.Interface;
 using System.Threading;
 using System.Globalization;
+using Medihelp.Graph.Core.Utils.Extensions;
 
 namespace Medihelp.Graph.Data.Repository
 {
@@ -79,11 +80,12 @@ namespace Medihelp.Graph.Data.Repository
             };
         }
 
-        public async Task<List<Beneficiary>> GetDepoendantsOnly(int memberNo)
+        public async Task<List<Beneficiary>> GetDepoendantsOnly(int memberNo, int depNo = 0)
         {
             var details = await _detailRequest.MemberDetailRequestAsync(new WebsiteIntergation.MemberDetailInput() { Scheme = "MH", MemberNumber = memberNo });
 
             return (from d in details.MemberDetailResponse.Dependants.Skip(1)
+                    where (depNo != 0 ? d.DependantNumber == depNo : true)
                     select new Beneficiary
                     {
                         DependantNumber = d.DependantNumber.Value,
@@ -103,11 +105,12 @@ namespace Medihelp.Graph.Data.Repository
                     }).ToList();
         }
 
-        public async Task<List<MemberAddress>> GetAllAddresses(int memberNo)
+        public async Task<List<MemberAddress>> GetAllAddresses(int memberNo, string addressType)
         {
             var details = await _detailRequest.MemberDetailRequestAsync(new WebsiteIntergation.MemberDetailInput() { Scheme = "MH", MemberNumber = memberNo });
 
             return (from d in details.MemberDetailResponse.Addresses
+                    where (addressType != "all" ? d.Type.ToLower() == addressType : true)
                     select new MemberAddress
                     {
                         Type = d.Type,
@@ -118,11 +121,12 @@ namespace Medihelp.Graph.Data.Repository
                     }).ToList();
         }
 
-        public async Task<List<ContactDetail>> GetContacts(int memberNo)
+        public async Task<List<ContactDetail>> GetContacts(int memberNo, string type)
         {
             var details = await _detailRequest.MemberDetailRequestAsync(new WebsiteIntergation.MemberDetailInput() { Scheme = "MH", MemberNumber = memberNo });
 
             return (from d in details.MemberDetailResponse.PhoneNumbers
+                    where (type != "all" ? d.Type.ToLower().Contains(type) : true)
                     select new ContactDetail
                     {
                         Type = d.Type,
@@ -169,12 +173,13 @@ namespace Medihelp.Graph.Data.Repository
                         RateChargeIndicator = d.RateChargeInd
                     }).ToList();
         }
-        
+
         public async Task<List<Exclusion>> GetMemberExcluisions(int memberNo, int depNo)
         {
             var exclusions = await _detailRequest.ExclusionDetailRequestAsync(new WebsiteIntergation.ExclusionDetailInput { Scheme = "MH", MemberNumber = memberNo });
 
             return (from exc in exclusions.ExclusionDetailResponse.Exclusions
+                    where (depNo > 0 ? exc.DependantNumber == depNo : true)
                     select new Exclusion
                     {
                         Diagnosis = exc.DiagnosisCodeDescription,
@@ -213,11 +218,12 @@ namespace Medihelp.Graph.Data.Repository
             return sub;
         }
         
-        public async Task<List<LateJoinerPenalty>> GetMemberPenalties(int memberNo)
+        public async Task<List<LateJoinerPenalty>> GetMemberPenalties(int memberNo, int depNo = 0)
         {
             var details = await _detailRequest.MemberLateJoinerPenaltyRequestAsync(new WebsiteIntergation.MemberLateJoinerPenaltyInput() { Scheme = "MH", MemberNumber = memberNo });
 
             return (from ljp in details.MemberLateJoinerPenaltyResponse.LateJoinerPenalties
+                    where (depNo > 0 ? ljp.DependantNumber == depNo : true)
                     select new LateJoinerPenalty
                     {
                         LjpPercentage = ljp.AddonPercentage.ToString(),
@@ -229,5 +235,54 @@ namespace Medihelp.Graph.Data.Repository
                     }).ToList();
         }
 
+        public async Task<List<Benefit>> GetAvailableBenefits(int memberNo, int depNo = 0)
+        {
+            var benefits = await _detailRequest.MemberLimitRequestAsync(new WebsiteIntergation.MemberLimitInput() { Scheme = "MH", MemberNumber = memberNo });
+
+            return (from b in benefits.MemberLimitResponse.Limits
+                    select new Benefit
+                    {
+                        AgeGen = b.AgeGen,
+                        AmtReserved = b.AmtReserved,
+                        Available = b.Available,
+                        ConsultationCount = b.ConsultationCount,
+                        DateEffective = b.DateEffective,
+                        DateExpire = b.DateExpire,
+                        DependantName = "",
+                        Description = b.Description,
+                        FamilyIndividual = b.FamilyIndividual,
+                        LimitCode = b.LimitCode,
+                        LimitType = b.LimitType,
+                        LimitValue = b.LimitValue,
+                        PmbUsed = b.PmbUsed,
+                        Used = b.Used
+                    }).ToList();
+        }
+        
+        public async Task<SavingsReconciliation> GetSavingsReconciliation(int memberNo)
+        {
+            var Savingsrecon = await _detailRequest.MemberSavingsReconRequestAsync(new WebsiteIntergation.MemberSavingsReconInput() { Scheme = "MH", MemberNumber = memberNo });
+
+            SavingsReconciliation savings = new SavingsReconciliation();
+
+            savings.OpeningBalance = Savingsrecon.MemberSavingsReconResponse.OpeningBalance;
+            savings.SavingsAvailable = Savingsrecon.MemberSavingsReconResponse.SavingsAvailable;
+
+
+            savings.Lines.AddRange((from recon in Savingsrecon.MemberSavingsReconResponse.SavingsReconLines
+                                    select new SavingsReconciliationLine
+                                    {
+                                        Month = recon.Month,
+                                        Description = recon.Description,
+                                        DateService = recon.DateService.HasValue ? recon.DateService.Value.ToString(StringFormatExtension.DATE_FORMAT) : string.Empty,
+                                        Patient = recon.Patient,
+                                        DateStatement = recon.DateStatement.ToString(StringFormatExtension.DATE_FORMAT),
+                                        AmountDebit = StringFormatExtension.FormatRands(Math.Abs(recon.AmountDebit).ToString().Replace(",", ".")),
+                                        AmountCredit = StringFormatExtension.FormatRands(Math.Abs(recon.AmountCredit).ToString().Replace(",", ".")),
+                                        AmountCumulative = StringFormatExtension.FormatRands(Math.Abs(recon.AmountCumulative).ToString().Replace(",", ".")),
+                                    }).ToList());
+
+            return savings;
+        }
     }
 }

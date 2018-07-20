@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Medihelp.Graph.Core.Data;
 using Medihelp.Graph.Core.Data.Repository.Interface;
+using Medihelp.Graph.Core.Model;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
@@ -23,73 +24,82 @@ namespace Medihelp.Graph.Api.Controllers
             _memberRepo = memberRepo;
         }
 
-        [HttpGet]
+        [HttpGet("{membershipNo}")]
         /// <summary>
         /// Member Endpoint. Get principle member details
         /// </summary>
         /// <param name="membershipNo"></param>
         /// <returns></returns>
-        public async Task<IActionResult> Get([FromQuery, SwaggerParameter("Medihelp Membership number", Required = true)]int membershipNo)
+        public async Task<IActionResult> Get([SwaggerParameter("Medihelp Membership number", Required = true)]int membershipNo)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
 
             var memberDetail = await _memberRepo.GetMember(membershipNo).ConfigureAwait(false);
 
-            return Ok(memberDetail);
+            return Ok(new APIResponseObject { Success = true, Message = "", ResponseData = memberDetail });
         }
 
 
         [HttpGet]
-        [Route("Dependants")]
-        public async Task<IActionResult> GetDependants([FromQuery, SwaggerParameter("Medihelp Membership number", Required = true)]int membershipNo)
+        [Route("{membershipNo}/Dependants/{dependantNo=0}")]
+        public async Task<IActionResult> GetDependants([Required]int membershipNo, int dependantNo)
         {
-            var memberDependants = await _memberRepo.GetDepoendantsOnly(membershipNo).ConfigureAwait(false);
+            var memberDependants = await _memberRepo.GetDepoendantsOnly(membershipNo, dependantNo).ConfigureAwait(false);
 
-            return Ok(memberDependants);
+            return Ok(new APIResponseObject { Success = true, Message = "", ResponseData = memberDependants });
         }
 
         [HttpGet]
-        [Route("Addresses")]
-        public async Task<IActionResult> MemberAddresses([FromQuery, SwaggerParameter("Medihelp Membership number", Required = true)]int membershipNo)
+        [Route("{membershipNo}/Addresses/{type=all}")]
+        public async Task<IActionResult> MemberAddresses([Required]int membershipNo, string type)
         {
-            var memberDependants = await _memberRepo.GetAllAddresses(membershipNo).ConfigureAwait(false);
+            string[] addressTypes = new [] { "postal", "work", "street", "executors", "all" };
 
-            return Ok(memberDependants);
+            if (!String.IsNullOrEmpty(type) && (addressTypes.Where(x => !addressTypes.Contains(type)).Count() > 0))
+                return BadRequest(new APIResponseObject { Success = false, Message = "Adress type is invalid. Must be 'post', 'work', 'street' or 'executors'" });
+
+            var memberDependants = await _memberRepo.GetAllAddresses(membershipNo, type).ConfigureAwait(false);
+
+            return Ok(new APIResponseObject { Success = true, Message = "", ResponseData = memberDependants });
         }
 
         [HttpGet]
-        [Route("Contacts")]
-        public async Task<IActionResult> MemberContacts([FromQuery, SwaggerParameter("Medihelp Membership number", Required = true)]int membershipNo)
+        [Route("{membershipNo}/Contacts/{type=all}")]
+        public async Task<IActionResult> MemberContacts([Required]int membershipNo, string type)
         {
-            var memberDependants = await _memberRepo.GetContacts(membershipNo).ConfigureAwait(false);
+            string[] contactTypes = new[] { "work", "home", "fax", "cell", "all" };
 
-            return Ok(memberDependants);
+            if (!String.IsNullOrEmpty(type) && (contactTypes.Where(x => !contactTypes.Contains(type)).Count() > 0))
+                return BadRequest(new APIResponseObject { Success = false, Message = "Adress type is invalid. Must be 'work', 'home', 'fax' or 'cell'" });
+
+            var memberDependants = await _memberRepo.GetContacts(membershipNo, type).ConfigureAwait(false);
+
+            return Ok(new APIResponseObject { Success = true, Message = "", ResponseData = memberDependants });
         }
 
         [HttpGet]
-        [Route("ProductHistory")]
+        [Route("{membershipNo}/ProductHistory")]
         public async Task<IActionResult> MemberBenefitOptionHistory([Required]int membershipNo)
         {
-            var memberDependants = await _memberRepo.GetProductHistory(membershipNo).ConfigureAwait(false);
+            var optionHistory = await _memberRepo.GetProductHistory(membershipNo).ConfigureAwait(false);
 
-            return Ok(memberDependants);
+            return Ok(new APIResponseObject { Success = true, Message = "", ResponseData = optionHistory });
         }
 
+
         [HttpGet]
-        [Route("Banking")]
-        public async Task<IActionResult> GetMemberBankingDetails([FromQuery, SwaggerParameter("Medihelp Membership number", Required = true)]int membershipNo)
+        [Route("{membershipNo}/Banking")]
+        public async Task<IActionResult> GetMemberBankingDetails([Required]int membershipNo)
         {
             var bankingDetails = await _memberRepo.GetBankingDetails(membershipNo).ConfigureAwait(false);
 
-            return Ok(bankingDetails);
+            return Ok(new APIResponseObject { Success = true, Message = "", ResponseData = bankingDetails });
         }
 
         [HttpGet]
-        [Route("SubscriptionBreakdown")]
-        public async Task<IActionResult> GetMemberSubscriptionBreakdown(
-            [FromQuery, SwaggerParameter("Medihelp Membership number", Required = true)]int membershipNo,
-            [FromQuery, SwaggerParameter("The Month (YYYYMMDD) you are requesting the subscription breadown for. If no Month is specificed, the current month's breakdown will be retieved", Required = true)]string month)
+        [Route("{membershipNo}/SubscriptionBreakdown/{month=}")]
+        public async Task<IActionResult> GetMemberSubscriptionBreakdown([Required]int membershipNo, string month)
         {
             var reqMonth = DateTime.Now;
 
@@ -98,25 +108,43 @@ namespace Medihelp.Graph.Api.Controllers
 
             var subBreakdown = await _memberRepo.GetSubscriptionBreakdown(membershipNo, reqMonth).ConfigureAwait(false);
 
-            return Ok(subBreakdown);
+            return Ok(new APIResponseObject { Success = true, Message = "", ResponseData = subBreakdown });
         }
 
         [HttpGet]
-        [Route("Exclusions")]
-        public async Task<IActionResult> GetMemberExclusionsList([FromQuery, SwaggerParameter("Medihelp Membership number", Required = true)]int membershipNo, int dependantNo)
+        [Route("{membershipNo}/Exclusions")]
+        public async Task<IActionResult> GetMemberExclusionsList([Required]int membershipNo, int dependantNo)
         {
             var waitingPeriods = await _memberRepo.GetMemberExcluisions(membershipNo, dependantNo).ConfigureAwait(false);
 
-            return Ok(waitingPeriods);
+            return Ok(new APIResponseObject { Success = true, Message = "", ResponseData = waitingPeriods });
         }
 
         [HttpGet]
-        [Route("Penalties")]
-        public async Task<IActionResult> GetMemberLatePenalties([FromQuery, SwaggerParameter("Medihelp Membership number", Required = true)]int membershipNo)
+        [Route("{membershipNo}/Penalties")]
+        public async Task<IActionResult> GetMemberLatePenalties([Required]int membershipNo)
         {
             var lateJoinerPens = await _memberRepo.GetMemberPenalties(membershipNo).ConfigureAwait(false);
 
-            return Ok(lateJoinerPens);
+            return Ok(new APIResponseObject { Success = true, Message = "", ResponseData = lateJoinerPens });
+        }
+        
+        [HttpGet]
+        [Route("{membershipNo}/Benefits")]
+        public async Task<IActionResult> GetMemberAvailableBenefits([Required]int membershipNo, int dependantNo)
+        {
+            var availBenefits = await _memberRepo.GetAvailableBenefits(membershipNo).ConfigureAwait(false);
+
+            return Ok(new APIResponseObject { Success = true, Message = "", ResponseData = availBenefits });
+        }
+
+        [HttpGet]
+        [Route("{membershipNo}/SavingsRecon")]
+        public async Task<IActionResult> GetMemberSavingsRecon([Required]int membershipNo)
+        {
+            var savingsRecon = await _memberRepo.GetSavingsReconciliation(membershipNo).ConfigureAwait(false);
+
+            return Ok(new APIResponseObject { Success = true, Message = "", ResponseData = savingsRecon });
         }
         
     }
